@@ -1,0 +1,16 @@
+{
+	"name": "generate-pack-svg-icons",
+	"version": "1.0.0",
+	"description": "",
+	"type": "module",
+	"main": "index.js",
+	"scripts": {
+		"generate": "powershell -ExecutionPolicy Bypass -File ./generate.ps1"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"svgo": "^3.3.2"
+	}
+}
