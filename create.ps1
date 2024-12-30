@@ -10,13 +10,20 @@ $outputFile = "$inputFolder.svg"
 <svg xmlns="http://www.w3.org/2000/svg">
 "@ | Out-File -FilePath $outputFile -Encoding utf8
 
-# Reemplazar 'svg' con 'symbol', eliminar 'xmlns' y agregar 'id' en cada archivo SVG
+# Reemplazar 'svg' con 'symbol', eliminar 'xmlns', y agregar 'id' en cada archivo SVG
 Get-ChildItem -Path $inputFolder -Filter *.svg | ForEach-Object {
     $fileName = [System.IO.Path]::GetFileNameWithoutExtension($_.Name)
     $content = Get-Content -Path $_.FullName
+    
+    # Eliminar atributos width y height
+    $content = $content -replace 'width="[^"]*"', ''
+    $content = $content -replace 'height="[^"]*"', ''
+    
+    # Reemplazar xmlns y svg por symbol
     $content = $content -replace 'xmlns="http://www.w3.org/2000/svg"', ''
     $content = $content -replace '<svg', "<symbol id='$fileName'"
     $content = $content -replace '</svg>', '</symbol>'
+    
     $content | Out-File -FilePath $outputFile -Append -Encoding utf8
 }
 
