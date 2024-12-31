@@ -27,10 +27,7 @@ if (Test-Path $outputFile) {
 Get-ChildItem -Path $inputFolder -Filter *.svg | ForEach-Object {
     $fileName = [System.IO.Path]::GetFileNameWithoutExtension($_.Name)
     $content = Get-Content -Path $_.FullName
-    
-    # Eliminar atributos width y height
-    # $content = $content -replace 'width="[^"]*"\s*|height="[^"]*"\s*', ''
-    
+     
     # Reemplazar xmlns y svg por symbol
     $content = $content -replace 'xmlns="http://www.w3.org/2000/svg"', ''
     $content = $content -replace '<svg', "<symbol id='$fileName'"
