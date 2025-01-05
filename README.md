@@ -1,16 +1,25 @@
-# SVG Icons
+# Generador de Paquetes de Iconos SVG
 
-Este proyecto permite optimizar y combinar archivos SVG en un solo archivo SVG utilizando scripts de PowerShell.
+Este proyecto proporciona una herramienta poderosa para optimizar y combinar múltiples archivos SVG en un único archivo SVG sprite, utilizando scripts de PowerShell. Ideal para proyectos web que requieren una gestión eficiente de iconos.
 
-## Requisitos
+## 🚀 Características Principales
 
-- PowerShell
-- Node.js
-- npm
+- Optimización automática de archivos SVG
+- Combinación de múltiples SVGs en un único sprite
+- Proceso automatizado mediante scripts de PowerShell
+- Compatibilidad con la gestión de paquetes npm
+- Eliminación automática de archivos temporales
+- Nombrado inteligente de símbolos SVG
 
-## Instalación
+## ⚙️ Requisitos Previos
 
-1. Clona el repositorio:
+- PowerShell 5.0 o superior
+- Node.js (versión 14.0 o superior recomendada)
+- npm o pnpm como gestor de paquetes
+
+## 📦 Instalación
+
+1. Clona el repositorio en tu máquina local:
 
    ```sh
    git clone https://github.com/JoseFEstevesP/generate-pack-svg-icons.git
@@ -18,52 +27,109 @@ Este proyecto permite optimizar y combinar archivos SVG en un solo archivo SVG u
    ```
 
 2. Instala las dependencias del proyecto:
+
    ```sh
    npm install
+   # O si prefieres usar pnpm
+   pnpm install
    ```
 
-## Uso
+## 🛠️ Uso
 
-1. Coloca tus archivos SVG en una carpeta.
+### Preparación de Archivos
 
-2. Ejecuta el script `generate` para optimizar y combinar los archivos SVG:
+1. Crea una carpeta para tus iconos SVG (por ejemplo, `mis-iconos`)
+2. Coloca todos tus archivos SVG en esta carpeta
+3. Asegúrate de que los nombres de los archivos sean descriptivos, ya que se usarán como IDs en el sprite final
+
+### Generación del Sprite
+
+1. Ejecuta el script de generación:
 
    ```sh
    npm run generate
+   # O con pnpm
+   pnpm generate
    ```
 
-3. El script te pedirá que ingreses el nombre de la carpeta que contiene los iconos SVG. Ingresa el nombre de la carpeta y presiona Enter.
+2. Cuando se te solicite, ingresa el nombre de la carpeta que contiene tus iconos SVG
+3. El script procesará automáticamente todos los archivos y generará el sprite
 
-4. El script optimizará los archivos SVG, los combinará en un solo archivo SVG y eliminará la carpeta temporal utilizada para la optimización.
+### Resultado
 
-## Scripts
+- Se creará un nuevo archivo SVG con el nombre de tu carpeta
+- Todos los iconos estarán optimizados y combinados en este único archivo
+- La carpeta temporal de procesamiento se eliminará automáticamente
 
-### [generate.ps1](generate.ps1)
+## 🔧 Scripts del Proyecto
 
-Este script realiza las siguientes acciones:
+### 📄 generate.ps1
 
-- Solicita al usuario el nombre de la carpeta que contiene los iconos SVG.
-- Verifica si la carpeta existe.
-- Crea una carpeta temporal para almacenar los archivos SVG optimizados.
-- Optimiza los archivos SVG usando `svgo`.
-- Ejecuta el script [create.ps1](create.ps1) con los archivos optimizados.
-- Elimina la carpeta temporal después de que se haya ejecutado el comando `create`.
+Este script principal maneja el flujo completo de generación:
 
-### [create.ps1](create.ps1)
+- Interacción con el usuario para obtener la carpeta de entrada
+- Validación de la existencia de la carpeta y archivos
+- Creación y gestión de directorios temporales
+- Optimización de SVGs mediante SVGO
+- Coordinación con create.ps1 para la generación final
+- Limpieza de archivos temporales
 
-Este script realiza las siguientes acciones:
+### 📄 create.ps1
 
-- Toma un parámetro de entrada `$inputFolder` que es la carpeta que contiene los archivos SVG.
-- Crea un archivo de salida con el nombre de la carpeta y la extensión `.svg`.
-- Escribe el encabezado del archivo SVG en el archivo de salida.
-- Para cada archivo SVG en la carpeta de entrada:
-  - Obtiene el nombre del archivo sin la extensión.
-  - Elimina el atributo `xmlns="http://www.w3.org/2000/svg"`.
-  - Reemplaza `<svg` con `<symbol id='nombre_del_archivo'`.
-  - Reemplaza `</svg>` con `</symbol>`.
-  - Agrega el contenido modificado al archivo de salida.
-- Escribe el cierre del archivo SVG en el archivo de salida.
+Script especializado en la creación del sprite:
 
-## Agradecimientos
+- Procesamiento de la carpeta de entrada
+- Generación de la estructura del sprite SVG
+- Manejo de símbolos y IDs únicos
+- Escritura del archivo SVG final
 
-Este proyecto fue posible gracias a la ayuda de GitHub Copilot, una IA que generó los scripts utilizados en este proyecto. Además, el proyecto fue inspirado por un proyecto similar del desarrollador [ManzDev](https://github.com/ManzDev).
+## 📚 Estructura del Proyecto
+
+```
+generate-pack-svg-icons/
+├── create.ps1         # Script de creación de sprite
+├── generate.ps1       # Script principal de generación
+├── package.json       # Configuración del proyecto
+├── svgo.config.js     # Configuración de optimización SVG
+└── README.md         # Documentación
+```
+
+## ⚡ Optimización
+
+El proyecto utiliza SVGO para optimizar los archivos SVG, realizando las siguientes mejoras:
+
+- Eliminación de metadatos innecesarios
+- Minimización de código
+- Optimización de paths
+- Eliminación de elementos redundantes
+
+## 🤝 Contribución
+
+Las contribuciones son bienvenidas. Para contribuir:
+
+1. Haz fork del proyecto
+2. Crea una rama para tu característica (`git checkout -b feature/AmazingFeature`)
+3. Realiza tus cambios
+4. Commit tus cambios (`git commit -m 'Add: AmazingFeature'`)
+5. Push a la rama (`git push origin feature/AmazingFeature`)
+6. Abre un Pull Request
+
+## 📝 Notas Importantes
+
+- Asegúrate de que tus SVGs sean válidos antes de procesarlos
+- Los nombres de los archivos deben ser únicos
+- Evita caracteres especiales en los nombres de los archivos
+- Recomendado para proyectos web que requieren múltiples iconos
+
+## 🐛 Solución de Problemas
+
+Si encuentras algún error, verifica:
+
+1. Que los permisos de PowerShell estén correctamente configurados
+2. Que todas las dependencias estén instaladas
+3. Que los archivos SVG sean válidos
+4. Que los nombres de archivo no contengan caracteres especiales
+
+## 📄 Licencia
+
+Este proyecto está licenciado bajo los términos de la licencia MIT.
