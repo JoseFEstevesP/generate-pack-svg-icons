@@ -5,12 +5,16 @@
 	"type": "module",
 	"main": "index.js",
 	"scripts": {
-		"generate": "powershell -ExecutionPolicy Bypass -File ./generate.ps1"
+		"generate": "node generate.js"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
+		"child_process": "1.0.2",
+		"fs": "0.0.1-security",
+		"path": "0.12.7",
+		"prompts": "2.4.2",
 		"svgo": "^3.3.2"
 	}
 }
