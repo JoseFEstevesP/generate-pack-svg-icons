@@ -1,0 +1,10 @@
+node_modules/
+output/
+last_output_path.json
+*.log
+.DS_Store
+icon/
+.agents
+geminiChat.txt
+svg-packer-config.json
+svg-packer-config.json
