@@ -34,30 +34,48 @@ export default defineConfig({
             return
           }
 
+          if (req.url === '/api/config' && req.method === 'POST') {
+            let body = ''
+            req.on('data', chunk => body += chunk)
+            req.on('end', async () => {
+              try {
+                const { saveConfig } = await import('./src/server/generate.js')
+                saveConfig(JSON.parse(body))
+                res.setHeader('Content-Type', 'application/json')
+                res.end(JSON.stringify({ ok: true }))
+              } catch (err) {
+                res.statusCode = 500
+                res.setHeader('Content-Type', 'application/json')
+                res.end(JSON.stringify({ ok: false, error: err.message }))
+              }
+            })
+            return
+          }
+
           if (req.url === '/api/browse' && req.method === 'POST') {
-            try {
-              let body = ''
-              req.on('data', chunk => body += chunk)
-              req.on('end', async () => {
+            let body = ''
+            req.on('data', chunk => body += chunk)
+            req.on('end', async () => {
+              try {
                 const { path: browsePath } = JSON.parse(body)
                 const { listDirectories } = await import('./src/server/generate.js')
                 const result = listDirectories(browsePath || '')
                 res.setHeader('Content-Type', 'application/json')
                 res.end(JSON.stringify(result))
-              })
-            } catch (err) {
-              res.statusCode = 500
-              res.setHeader('Content-Type', 'application/json')
-              res.end(JSON.stringify({ ok: false, error: err.message }))
-            }
+              } catch (err) {
+                res.statusCode = 500
+                res.setHeader('Content-Type', 'application/json')
+                res.end(JSON.stringify({ ok: false, error: err.message }))
+              }
+            })
             return
           }
 
           if (req.url === '/api/generate' && req.method === 'POST') {
-            try {
-              let body = ''
-              req.on('data', chunk => body += chunk)
-              req.on('end', async () => {
+            let body = ''
+            req.on('data', chunk => body += chunk)
+            req.on('end', async () => {
+              try {
                 const { pack, outputDir, returnContent } = JSON.parse(body)
                 const { generatePack, saveConfig, getConfig } = await import('./src/server/generate.js')
 
@@ -65,21 +83,23 @@ export default defineConfig({
 
                 if (result.ok) {
                   const config = getConfig()
-                  const history = config.output_history || []
+                  const history = (config.output_history || []).map(e =>
+                    typeof e === 'string' ? { path: e, alias: '' } : e
+                  )
                   const entry = outputDir || 'output'
-                  config.output_history = [entry, ...history.filter(d => d !== entry)].slice(0, 5)
+                  config.output_history = [{ path: entry, alias: '' }, ...history.filter(e => e.path !== entry)].slice(0, 5)
                   config.last_used = pack
                   saveConfig(config)
                 }
 
                 res.setHeader('Content-Type', 'application/json')
                 res.end(JSON.stringify(result))
-              })
-            } catch (err) {
-              res.statusCode = 500
-              res.setHeader('Content-Type', 'application/json')
-              res.end(JSON.stringify({ ok: false, error: err.message }))
-            }
+              } catch (err) {
+                res.statusCode = 500
+                res.setHeader('Content-Type', 'application/json')
+                res.end(JSON.stringify({ ok: false, error: err.message }))
+              }
+            })
             return
           }
 

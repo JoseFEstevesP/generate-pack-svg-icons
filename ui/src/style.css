@@ -482,13 +482,22 @@ code {
 
 .modal-history {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 4px;
 }
 
-.modal-history-btn {
-  font-size: 0.714rem;
-  padding: 3px 8px;
+.history-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.history-row-path {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  font-size: 0.786rem;
+  padding: 4px 8px;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 4px;
@@ -496,17 +505,73 @@ code {
   cursor: pointer;
   font-family: 'JetBrains Mono', monospace;
   transition: all 0.12s;
-  max-width: 160px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  flex-shrink: 1;
-  min-width: 0;
 }
 
-.modal-history-btn:hover {
+.history-row-path:hover {
   border-color: var(--primary);
   color: var(--primary);
+}
+
+.history-row-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.history-row-btn:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.history-row-btn.danger:hover {
+  color: #EF4444;
+  border-color: #EF4444;
+}
+
+.history-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.786rem;
+  padding: 4px 8px;
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.12s;
+  align-self: flex-start;
+}
+
+.history-add-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.edit-input {
+  width: 100%;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 6px;
 }
 
 /* Dir browser */

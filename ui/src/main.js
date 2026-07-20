@@ -8,9 +8,10 @@ const state = {
   packs: [],
   activePack: null,
   searchQuery: '',
-  outputHistory: ['output'],
+  outputHistory: [{ path: 'output', alias: '' }],
   dirHandle: null,
   browsePath: '',
+  editingIndex: -1,
 }
 
 function parsePacks() {
@@ -37,12 +38,27 @@ async function loadConfig() {
     const resp = await fetch('/api/config')
     const config = await resp.json()
     if (config.output_history) {
-      state.outputHistory = config.output_history
+      state.outputHistory = config.output_history.map(e =>
+        typeof e === 'string' ? { path: e, alias: '' } : e
+      )
     }
     if (config.last_used && !state.activePack) {
       const match = state.packs.find(p => p.name === config.last_used)
       if (match) state.activePack = match.name
     }
+  } catch {}
+}
+
+async function saveConfigToServer() {
+  try {
+    await fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        last_used: state.activePack || '',
+        output_history: state.outputHistory,
+      }),
+    })
   } catch {}
 }
 
@@ -217,13 +233,106 @@ async function handleFolderPick() {
   }
 }
 
+function renderHistory() {
+  const history = document.getElementById('modal-history')
+  state.editingIndex = -1
+
+  let html = '<div class="modal-label" style="margin-bottom:4px">Saved locations</div>'
+  for (let i = 0; i < state.outputHistory.length; i++) {
+    const e = state.outputHistory[i]
+    const label = e.alias || e.path.split('/').filter(Boolean).slice(-2).join('/') || e.path
+    html += `
+      <div class="history-row">
+        <button class="history-row-path" data-index="${i}" title="${e.path}">${label}</button>
+        <button class="history-row-btn" data-index="${i}" data-action="edit" title="Edit alias">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+        </button>
+        <button class="history-row-btn danger" data-index="${i}" data-action="delete" title="Remove">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>`
+  }
+  html += `<button class="history-add-btn" id="btn-add-alias">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+    Add shortcut
+  </button>`
+
+  history.innerHTML = html
+
+  history.querySelectorAll('.history-row-path').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.index)
+      state.dirHandle = null
+      document.getElementById('modal-output').value = state.outputHistory[idx].path
+    })
+  })
+
+  history.querySelectorAll('[data-action="edit"]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const idx = parseInt(btn.dataset.index)
+      state.editingIndex = idx
+      renderEditForm(idx)
+    })
+  })
+
+  history.querySelectorAll('[data-action="delete"]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const idx = parseInt(btn.dataset.index)
+      state.outputHistory.splice(idx, 1)
+      saveConfigToServer()
+      renderHistory()
+    })
+  })
+
+  const addBtn = document.getElementById('btn-add-alias')
+  if (addBtn) {
+    addBtn.addEventListener('click', () => {
+      const newEntry = { path: document.getElementById('modal-output').value.trim(), alias: '' }
+      if (!newEntry.path) return
+      state.outputHistory = [newEntry, ...state.outputHistory.filter(e => e.path !== newEntry.path)].slice(0, 5)
+      state.editingIndex = 0
+      saveConfigToServer()
+      renderEditForm(0)
+    })
+  }
+}
+
+function renderEditForm(index) {
+  const history = document.getElementById('modal-history')
+  const e = state.outputHistory[index]
+  history.innerHTML = `
+    <div class="modal-label" style="margin-bottom:4px">Edit shortcut</div>
+    <div class="edit-form">
+      <input class="modal-input edit-input" id="edit-alias" placeholder="Alias (e.g. Workshop Icons)" value="${e.alias || ''}">
+      <input class="modal-input edit-input" id="edit-path" placeholder="Full path" value="${e.path}">
+      <div class="edit-actions">
+        <button class="btn btn-primary" id="edit-save">Save</button>
+        <button class="btn modal-cancel" id="edit-cancel">Cancel</button>
+      </div>
+    </div>`
+
+  document.getElementById('edit-save').addEventListener('click', () => {
+    const alias = document.getElementById('edit-alias').value.trim()
+    const path = document.getElementById('edit-path').value.trim()
+    if (!path) return
+    state.outputHistory[index] = { path, alias }
+    saveConfigToServer()
+    renderHistory()
+  })
+
+  document.getElementById('edit-cancel').addEventListener('click', () => {
+    renderHistory()
+  })
+}
+
 function openModal() {
   const modal = document.getElementById('modal')
   const overlay = document.getElementById('overlay')
   const packName = document.getElementById('modal-pack-name')
   const outputInput = document.getElementById('modal-output')
   const result = document.getElementById('modal-result')
-  const history = document.getElementById('modal-history')
 
   packName.textContent = state.activePack
   result.textContent = ''
@@ -231,19 +340,11 @@ function openModal() {
   document.getElementById('dir-browser').style.display = 'none'
 
   if (!state.dirHandle) {
-    const defaultDir = state.outputHistory[0] || 'output'
+    const defaultDir = state.outputHistory[0]?.path || 'output'
     outputInput.value = defaultDir
   }
 
-  history.innerHTML = state.outputHistory.map(d =>
-    `<button class="modal-history-btn" data-dir="${d}" title="${d}">${d}</button>`
-  ).join('')
-  history.querySelectorAll('.modal-history-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      state.dirHandle = null
-      outputInput.value = btn.dataset.dir
-    })
-  })
+  renderHistory()
 
   modal.classList.add('visible')
   overlay.classList.add('visible')
@@ -314,7 +415,8 @@ async function handleGenerate() {
         data.size.optimized,
         data.savings
       )
-      state.outputHistory = [dirName, ...state.outputHistory.filter(d => d !== dirName)].slice(0, 5)
+      state.outputHistory = [{ path: dirName, alias: '' }, ...state.outputHistory.filter(e => e.path !== dirName)].slice(0, 5)
+      saveConfigToServer()
       showToast(`Pack "${pack}" generated in ${dirName}`)
     } else {
       const resp = await fetch('/api/generate', {
@@ -339,7 +441,8 @@ async function handleGenerate() {
         data.savings
       )
 
-      state.outputHistory = [outputDir, ...state.outputHistory.filter(d => d !== outputDir)].slice(0, 5)
+      state.outputHistory = [{ path: outputDir, alias: '' }, ...state.outputHistory.filter(e => e.path !== outputDir)].slice(0, 5)
+      saveConfigToServer()
       showToast(`Pack "${pack}" generated`)
     }
   } catch (err) {
