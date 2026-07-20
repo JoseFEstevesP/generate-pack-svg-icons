@@ -1,135 +1,94 @@
 # Generador de Paquetes de Iconos SVG
 
-Este proyecto proporciona una herramienta poderosa para optimizar y combinar múltiples archivos SVG en un único archivo SVG sprite, utilizando scripts de PowerShell. Ideal para proyectos web que requieren una gestión eficiente de iconos.
+Herramienta para optimizar y combinar múltiples archivos SVG en un único SVG sprite.
 
-## 🚀 Características Principales
+## Características
 
-- Optimización automática de archivos SVG
-- Combinación de múltiples SVGs en un único sprite
-- Proceso automatizado mediante scripts de PowerShell
-- Compatibilidad con la gestión de paquetes npm
-- Eliminación automática de archivos temporales
-- Nombrado inteligente de símbolos SVG
+- Optimización automática con SVGO
+- Generación de sprite SVG a partir de una carpeta de iconos
+- CLI interactiva (Inquirer) y por argumentos
+- Procesamiento paralelo para packs grandes
+- Modo observador (watch) para regeneración automática
+- Preview HTML de todos los iconos
+- Soporte para subdirectorios dentro de packs
+- Historial de rutas de salida
+- Salida JSON machine-readable
 
-## ⚙️ Requisitos Previos
+## Requisitos
 
-- PowerShell 5.0 o superior
-- Node.js (versión 14.0 o superior recomendada)
-- npm o pnpm como gestor de paquetes
+- Node.js 18+
+- pnpm (recomendado) o npm
 
-## 📦 Instalación
+## Instalación
 
-1. Clona el repositorio en tu máquina local:
+```sh
+pnpm install
+```
 
-   ```sh
-   git clone https://github.com/JoseFEstevesP/generate-pack-svg-icons.git
-   cd generate-pack-svg-icons
-   ```
+## Uso
 
-2. Instala las dependencias del proyecto:
+### Modo interactivo
 
-   ```sh
-   npm install
-   # O si prefieres usar pnpm
-   pnpm install
-   ```
+```sh
+pnpm generate
+```
 
-## 🛠️ Uso
+### Modo CLI directo
 
-### Preparación de Archivos
+```sh
+pnpm generate --pack adminProject
+pnpm generate --pack adminProject --output ../mi-proyecto/assets
+pnpm generate --pack adminProject --no-optimize
+pnpm generate --pack adminProject --preview
+pnpm generate --pack adminProject --watch
+pnpm generate --pack adminProject --json
+```
 
-1. Crea una carpeta para tus iconos SVG (por ejemplo, `mis-iconos`)
-2. Coloca todos tus archivos SVG en esta carpeta
-3. Asegúrate de que los nombres de los archivos sean descriptivos, ya que se usarán como IDs en el sprite final
+### Opciones
 
-### Generación del Sprite
+| Opción | Alias | Descripción |
+|--------|-------|-------------|
+| `--pack <nombre>` | `-p` | Nombre del pack a generar |
+| `--output <ruta>` | `-o` | Carpeta de salida |
+| `--no-optimize` | | Deshabilitar optimización SVGO |
+| `--preview` | | Generar preview HTML de los iconos |
+| `--watch` | `-w` | Modo observador (regenera al detectar cambios) |
+| `--json` | | Salida en formato JSON |
+| `--help` | `-h` | Mostrar ayuda |
+| `--version` | `-v` | Mostrar versión |
 
-1. Ejecuta el script de generación:
-
-   ```sh
-   npm run generate
-   # O con pnpm
-   pnpm generate
-   ```
-
-2. Cuando se te solicite, ingresa el nombre de la carpeta que contiene tus iconos SVG
-3. El script procesará automáticamente todos los archivos y generará el sprite
-
-### Resultado
-
-- Se creará un nuevo archivo SVG con el nombre de tu carpeta
-- Todos los iconos estarán optimizados y combinados en este único archivo
-- La carpeta temporal de procesamiento se eliminará automáticamente
-
-## 🔧 Scripts del Proyecto
-
-### 📄 generate.ps1
-
-Este script principal maneja el flujo completo de generación:
-
-- Interacción con el usuario para obtener la carpeta de entrada
-- Validación de la existencia de la carpeta y archivos
-- Creación y gestión de directorios temporales
-- Optimización de SVGs mediante SVGO
-- Coordinación con create.ps1 para la generación final
-- Limpieza de archivos temporales
-
-### 📄 create.ps1
-
-Script especializado en la creación del sprite:
-
-- Procesamiento de la carpeta de entrada
-- Generación de la estructura del sprite SVG
-- Manejo de símbolos y IDs únicos
-- Escritura del archivo SVG final
-
-## 📚 Estructura del Proyecto
+## Estructura
 
 ```
 generate-pack-svg-icons/
-├── create.ps1         # Script de creación de sprite
-├── generate.ps1       # Script principal de generación
-├── package.json       # Configuración del proyecto
-├── svgo.config.js     # Configuración de optimización SVG
-└── README.md         # Documentación
+├── src/
+│   ├── index.js           # Entry point
+│   ├── core/
+│   │   ├── generate.js    # CLI argument parsing y orquestación
+│   │   ├── create.js      # Generación del sprite
+│   │   └── svg-processor.js  # Procesamiento y optimización SVG
+│   ├── cli/
+│   │   ├── banner.js      # Banner de bienvenida
+│   │   └── prompts.js     # Prompts interactivos (Inquirer)
+│   └── utils/
+│       └── fs-utils.js    # Operaciones de sistema de archivos
+├── icon/                  # Carpeta con los packs de iconos (ignorada en git)
+├── output/                # Sprites generados (ignorada en git)
+├── tests/
+├── svgo.config.js
+├── eslint.config.js
+└── package.json
 ```
 
-## ⚡ Optimización
+## Scripts
 
-El proyecto utiliza SVGO para optimizar los archivos SVG, realizando las siguientes mejoras:
+```sh
+pnpm generate    # Generar pack SVG
+pnpm test        # Ejecutar tests
+pnpm lint        # Linter
+pnpm format      # Formatear código
+```
 
-- Eliminación de metadatos innecesarios
-- Minimización de código
-- Optimización de paths
-- Eliminación de elementos redundantes
+## Licencia
 
-## 🤝 Contribución
-
-Las contribuciones son bienvenidas. Para contribuir:
-
-1. Haz fork del proyecto
-2. Crea una rama para tu característica (`git checkout -b feature/AmazingFeature`)
-3. Realiza tus cambios
-4. Commit tus cambios (`git commit -m 'Add: AmazingFeature'`)
-5. Push a la rama (`git push origin feature/AmazingFeature`)
-6. Abre un Pull Request
-
-## 📝 Notas Importantes
-
-- Asegúrate de que tus SVGs sean válidos antes de procesarlos
-- Los nombres de los archivos deben ser únicos
-- Evita caracteres especiales en los nombres de los archivos
-- Recomendado para proyectos web que requieren múltiples iconos
-
-## 🐛 Solución de Problemas
-
-Si encuentras algún error, verifica:
-
-1. Que los permisos de PowerShell estén correctamente configurados
-2. Que todas las dependencias estén instaladas
-3. Que los archivos SVG sean válidos
-4. Que los nombres de archivo no contengan caracteres especiales
-
-## 📄 Licencia
-
-Este proyecto está licenciado bajo los términos de la licencia MIT.
+MIT
