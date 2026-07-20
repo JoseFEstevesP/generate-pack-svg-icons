@@ -596,15 +596,32 @@ code {
   background: rgba(52, 211, 153, 0.08);
   border: 1px solid rgba(52, 211, 153, 0.2);
   border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.result-file {
   font-size: 0.857rem;
+  font-weight: 600;
   color: #34D399;
-  line-height: 1.5;
   font-family: 'JetBrains Mono', monospace;
-  word-break: break-word;
-  hyphens: auto;
-  max-height: 160px;
-  overflow-y: auto;
-  white-space: pre-wrap;
+}
+
+.result-path {
+  font-size: 0.714rem;
+  color: rgba(52, 211, 153, 0.6);
+  font-family: 'JetBrains Mono', monospace;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: thin;
+  padding-bottom: 2px;
+}
+
+.result-stats {
+  font-size: 0.786rem;
+  color: rgba(52, 211, 153, 0.8);
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .modal-result.error {

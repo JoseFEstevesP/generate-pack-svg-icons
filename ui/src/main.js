@@ -153,13 +153,6 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove('visible'), 1800)
 }
 
-function truncatePath(fullPath) {
-  const parts = fullPath.split('/')
-  if (parts.length <= 4) return fullPath
-  const tail = parts.slice(-3).join('/')
-  return '.../' + tail
-}
-
 async function loadDirBrowser(dirPath) {
   const pathEl = document.getElementById('dir-browser-path')
   const listEl = document.getElementById('dir-browser-list')
@@ -226,7 +219,7 @@ async function handleFolderPick() {
   const browser = document.getElementById('dir-browser')
   browser.style.display = browser.style.display === 'none' ? 'flex' : 'none'
   if (browser.style.display === 'flex') {
-    loadDirBrowser(state.browsePath || '/home')
+    loadDirBrowser(state.browsePath)
   }
 }
 
@@ -275,6 +268,18 @@ function showResult(msg, type) {
   el.className = 'modal-result ' + type
 }
 
+function showSuccessResult(fullPath, icons, raw, opt, savings) {
+  const el = document.getElementById('modal-result')
+  const fileName = fullPath.split('/').pop()
+  const dirPath = fullPath.slice(0, fullPath.lastIndexOf('/'))
+  el.className = 'modal-result success'
+  el.innerHTML = `
+    <div class="result-file">${fileName}</div>
+    <div class="result-path" title="${dirPath}">${dirPath}</div>
+    <div class="result-stats">${icons} icons · ${(raw / 1024).toFixed(1)}KB → ${(opt / 1024).toFixed(1)}KB (${savings}% savings)</div>
+  `
+}
+
 async function handleGenerate() {
   const btnGen = document.getElementById('modal-generate')
   const pack = state.activePack
@@ -308,9 +313,12 @@ async function handleGenerate() {
       await writable.close()
 
       const dirName = state.dirHandle.name
-      showResult(
-        `Generated: ${dirName}/${fileName}\n${data.icons.processed} icons · ${(data.size.raw / 1024).toFixed(1)}KB → ${(data.size.optimized / 1024).toFixed(1)}KB (${data.savings}% savings)`,
-        'success'
+      showSuccessResult(
+        `${dirName}/${fileName}`,
+        data.icons.processed,
+        data.size.raw,
+        data.size.optimized,
+        data.savings
       )
       state.outputHistory = [dirName, ...state.outputHistory.filter(d => d !== dirName)].slice(0, 5)
       showToast(`Pack "${pack}" generated in ${dirName}`)
@@ -329,13 +337,13 @@ async function handleGenerate() {
         return
       }
 
-      const pathStr = truncatePath(data.output)
-      showResult(
-        `Generated: ${pathStr}\n${data.icons.processed} icons · ${(data.size.raw / 1024).toFixed(1)}KB → ${(data.size.optimized / 1024).toFixed(1)}KB (${data.savings}% savings)`,
-        'success'
+      showSuccessResult(
+        data.output,
+        data.icons.processed,
+        data.size.raw,
+        data.size.optimized,
+        data.savings
       )
-      const resultEl = document.getElementById('modal-result')
-      resultEl.title = data.output
 
       state.outputHistory = [outputDir, ...state.outputHistory.filter(d => d !== outputDir)].slice(0, 5)
       showToast(`Pack "${pack}" generated`)

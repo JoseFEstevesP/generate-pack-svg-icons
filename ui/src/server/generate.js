@@ -1,5 +1,6 @@
 import path from 'path'
 import fs from 'fs'
+import os from 'os'
 import { fileURLToPath } from 'url'
 import { processSVGFile, buildSprite } from '../../../src/core/svg-processor.js'
 
@@ -42,9 +43,10 @@ function getSVGFiles(folderPath) {
 }
 
 export function listDirectories(dirPath) {
-  const absPath = path.isAbsolute(dirPath) ? dirPath : path.resolve(ROOT_DIR, dirPath)
+  const target = dirPath || os.homedir()
+  const absPath = path.isAbsolute(target) ? target : path.resolve(ROOT_DIR, target)
   if (!fs.existsSync(absPath)) {
-    return { ok: false, error: 'Directory does not exist' }
+    return { ok: false, error: `Directory does not exist: ${absPath}` }
   }
   const entries = fs.readdirSync(absPath, { withFileTypes: true })
   const dirs = entries
