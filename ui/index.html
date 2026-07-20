@@ -64,7 +64,12 @@
       </div>
       <div class="modal-field">
         <label class="modal-label" for="modal-output">Output directory</label>
-        <input type="text" class="modal-input" id="modal-output" placeholder="output" autocomplete="off">
+        <div class="modal-input-row">
+          <input type="text" class="modal-input" id="modal-output" placeholder="output" autocomplete="off">
+          <button class="btn btn-folder" id="btn-folder-picker" title="Browse folders">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          </button>
+        </div>
         <div class="modal-history" id="modal-history"></div>
       </div>
       <div class="modal-result" id="modal-result"></div>

@@ -41,7 +41,7 @@ function getSVGFiles(folderPath) {
     .sort()
 }
 
-export async function generatePack(packName, outputDir) {
+export async function generatePack(packName, outputDir, returnContent = false) {
   const folders = getIconFolders()
   const match = folders.find(f => f.name === packName)
   if (!match) {
@@ -87,6 +87,21 @@ export async function generatePack(packName, outputDir) {
   }
 
   const svgContent = buildSprite(symbols.filter(Boolean))
+
+  if (returnContent) {
+    const savings = totalRaw > 0
+      ? ((1 - totalOpt / totalRaw) * 100).toFixed(1)
+      : '0.0'
+    return {
+      ok: true,
+      name: packName,
+      content: svgContent,
+      icons: { total: svgFiles.length, processed: symbols.length, errors },
+      size: { raw: totalRaw, optimized: totalOpt },
+      savings,
+    }
+  }
+
   fs.writeFileSync(outputFile, svgContent, 'utf8')
   const finalSize = fs.statSync(outputFile).size
   const savings = totalRaw > 0

@@ -39,10 +39,10 @@ export default defineConfig({
               let body = ''
               req.on('data', chunk => body += chunk)
               req.on('end', async () => {
-                const { pack, outputDir } = JSON.parse(body)
+                const { pack, outputDir, returnContent } = JSON.parse(body)
                 const { generatePack, saveConfig, getConfig } = await import('./src/server/generate.js')
 
-                const result = await generatePack(pack, outputDir || 'output')
+                const result = await generatePack(pack, outputDir || 'output', returnContent)
 
                 if (result.ok) {
                   const config = getConfig()

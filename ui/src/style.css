@@ -431,8 +431,40 @@ code {
   font-family: 'Instrument Sans', sans-serif;
 }
 
+.modal-input-row {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.modal-input-row .modal-input {
+  flex: 1;
+}
+
+.btn-folder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-folder:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn-folder:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .modal-input {
-  width: 100%;
   padding: 8px 12px;
   background: var(--bg);
   border: 1px solid var(--border);
@@ -485,6 +517,10 @@ code {
   color: #34D399;
   line-height: 1.5;
   font-family: 'JetBrains Mono', monospace;
+  word-break: break-all;
+  max-height: 160px;
+  overflow-y: auto;
+  white-space: pre-wrap;
 }
 
 .modal-result.error {
@@ -495,6 +531,7 @@ code {
   font-size: 0.857rem;
   color: #EF4444;
   line-height: 1.5;
+  word-break: break-all;
 }
 
 .modal-footer {

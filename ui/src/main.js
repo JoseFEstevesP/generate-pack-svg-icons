@@ -9,6 +9,7 @@ const state = {
   activePack: null,
   searchQuery: '',
   outputHistory: ['output'],
+  dirHandle: null,
 }
 
 function parsePacks() {
@@ -151,6 +152,21 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove('visible'), 1800)
 }
 
+async function handleFolderPick() {
+  if (!window.showDirectoryPicker) {
+    showToast('Your browser does not support folder picking. Type the path manually.')
+    return
+  }
+  try {
+    const handle = await window.showDirectoryPicker()
+    state.dirHandle = handle
+    document.getElementById('modal-output').value = handle.name
+    showToast(`Selected: ${handle.name}`)
+  } catch {
+    state.dirHandle = null
+  }
+}
+
 function openModal() {
   const modal = document.getElementById('modal')
   const overlay = document.getElementById('overlay')
@@ -163,14 +179,17 @@ function openModal() {
   result.textContent = ''
   result.className = 'modal-result'
 
-  const defaultDir = state.outputHistory[0] || 'output'
-  outputInput.value = defaultDir
+  if (!state.dirHandle) {
+    const defaultDir = state.outputHistory[0] || 'output'
+    outputInput.value = defaultDir
+  }
 
   history.innerHTML = state.outputHistory.map(d =>
     `<button class="modal-history-btn" data-dir="${d}">${d}</button>`
   ).join('')
   history.querySelectorAll('.modal-history-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+      state.dirHandle = null
       outputInput.value = btn.dataset.dir
     })
   })
@@ -195,6 +214,7 @@ async function handleGenerate() {
   const btnGen = document.getElementById('modal-generate')
   const pack = state.activePack
   const outputDir = document.getElementById('modal-output').value.trim() || 'output'
+  const fileName = `${pack}-pack.svg`
 
   btnGen.disabled = true
   btnGen.innerHTML = 'Generating...'
@@ -202,22 +222,54 @@ async function handleGenerate() {
   showResult('Generating...', '')
 
   try {
-    const resp = await fetch('/api/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pack, outputDir }),
-    })
-    const data = await resp.json()
+    if (state.dirHandle) {
+      const resp = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pack, outputDir, returnContent: true }),
+      })
+      const data = await resp.json()
 
-    if (data.ok) {
+      if (!data.ok) {
+        showResult(`Error: ${data.error}`, 'error')
+        btnGen.disabled = false
+        btnGen.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Generate`
+        return
+      }
+
+      const fileHandle = await state.dirHandle.getFileHandle(fileName, { create: true })
+      const writable = await fileHandle.createWritable()
+      await writable.write(data.content)
+      await writable.close()
+
+      const dirName = state.dirHandle.name
+      showResult(
+        `Generated: ${dirName}/${fileName}\n${data.icons.processed} icons · ${(data.size.raw / 1024).toFixed(1)}KB → ${(data.size.optimized / 1024).toFixed(1)}KB (${data.savings}% savings)`,
+        'success'
+      )
+      state.outputHistory = [dirName, ...state.outputHistory.filter(d => d !== dirName)].slice(0, 5)
+      showToast(`Pack "${pack}" generated in ${dirName}`)
+    } else {
+      const resp = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pack, outputDir }),
+      })
+      const data = await resp.json()
+
+      if (!data.ok) {
+        showResult(`Error: ${data.error}`, 'error')
+        btnGen.disabled = false
+        btnGen.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Generate`
+        return
+      }
+
       showResult(
         `Generated: ${data.output}\n${data.icons.processed} icons · ${(data.size.raw / 1024).toFixed(1)}KB → ${(data.size.optimized / 1024).toFixed(1)}KB (${data.savings}% savings)`,
         'success'
       )
       state.outputHistory = [outputDir, ...state.outputHistory.filter(d => d !== outputDir)].slice(0, 5)
       showToast(`Pack "${pack}" generated`)
-    } else {
-      showResult(`Error: ${data.error}`, 'error')
     }
   } catch (err) {
     showResult(`Error: ${err.message}`, 'error')
@@ -248,6 +300,7 @@ function init() {
   })
 
   document.getElementById('btn-generate').addEventListener('click', openModal)
+  document.getElementById('btn-folder-picker').addEventListener('click', handleFolderPick)
   document.getElementById('modal-close').addEventListener('click', closeModal)
   document.getElementById('modal-cancel').addEventListener('click', closeModal)
   document.getElementById('overlay').addEventListener('click', closeModal)
