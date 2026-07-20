@@ -4,6 +4,8 @@ Herramienta para optimizar y combinar múltiples archivos SVG en un único SVG s
 
 ## Características
 
+- **Interfaz web** (Vite) para explorar y gestionar packs visualmente
+- **Crear packs personalizados**: seleccionar iconos de packs existentes, subir SVGs o pegar código SVG
 - Optimización automática con SVGO
 - Generación de sprite SVG a partir de una carpeta de iconos
 - CLI interactiva (Inquirer) y por argumentos
@@ -26,6 +28,19 @@ pnpm install
 ```
 
 ## Uso
+
+### Interfaz Web (recomendada)
+
+```sh
+cd ui
+pnpm dev
+```
+
+Abrir `http://localhost:5173` en el navegador. Desde la UI puedes:
+
+- Explorar todos los packs de iconos
+- **Crear packs personalizados** seleccionando iconos de packs existentes, subiendo archivos SVG o pegando código SVG
+- Generar sprites SVG optimizados
 
 ### Modo interactivo
 
@@ -72,6 +87,15 @@ generate-pack-svg-icons/
 │   │   └── prompts.js     # Prompts interactivos (Inquirer)
 │   └── utils/
 │       └── fs-utils.js    # Operaciones de sistema de archivos
+├── ui/                    # Interfaz web (Vite)
+│   ├── index.html
+│   ├── src/
+│   │   ├── main.js        # Lógica del cliente
+│   │   ├── style.css      # Estilos
+│   │   └── server/
+│   │       └── generate.js  # API server-side
+│   ├── vite.config.js
+│   └── package.json
 ├── icon/                  # Carpeta con los packs de iconos (ignorada en git)
 ├── output/                # Sprites generados (ignorada en git)
 ├── tests/
@@ -82,11 +106,21 @@ generate-pack-svg-icons/
 
 ## Scripts
 
+### Raíz (CLI)
+
 ```sh
 pnpm generate    # Generar pack SVG
 pnpm test        # Ejecutar tests
 pnpm lint        # Linter
 pnpm format      # Formatear código
+```
+
+### UI (interfaz web)
+
+```sh
+cd ui
+pnpm dev         # Iniciar servidor de desarrollo
+pnpm build       # Compilar para producción
 ```
 
 ## Licencia
