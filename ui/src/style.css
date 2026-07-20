@@ -381,7 +381,7 @@ code {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
-  width: 420px;
+  width: 520px;
   max-width: calc(100vw - 32px);
   z-index: 51;
   flex-direction: column;
@@ -502,6 +502,89 @@ code {
   border-color: var(--primary);
   color: var(--primary);
 }
+
+/* Dir browser */
+
+.dir-browser {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.dir-browser-header {
+  padding: 8px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.dir-browser-path {
+  padding: 0 12px;
+  font-size: 0.786rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-muted);
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+.dir-browser-list {
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 4px 8px;
+}
+
+.dir-browser-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.857rem;
+  color: var(--text-muted);
+  transition: all 0.12s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.dir-browser-item:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.dir-browser-item svg {
+  flex-shrink: 0;
+}
+
+.dir-browser-item-up {
+  color: var(--primary);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+  border-radius: 0;
+  padding-bottom: 8px;
+}
+
+.dir-browser-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.dir-browser-empty {
+  padding: 16px;
+  text-align: center;
+  font-size: 0.857rem;
+  color: var(--text-dim);
+}
+
+/* Modal result */
 
 .modal-result {
   min-height: 0;

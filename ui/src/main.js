@@ -10,6 +10,7 @@ const state = {
   searchQuery: '',
   outputHistory: ['output'],
   dirHandle: null,
+  browsePath: '',
 }
 
 function parsePacks() {
@@ -152,18 +153,80 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove('visible'), 1800)
 }
 
-async function handleFolderPick() {
-  if (!window.showDirectoryPicker) {
-    showToast('Your browser does not support folder picking. Type the path manually.')
-    return
-  }
+function truncatePath(fullPath) {
+  const parts = fullPath.split('/')
+  if (parts.length <= 4) return fullPath
+  const tail = parts.slice(-3).join('/')
+  return '.../' + tail
+}
+
+async function loadDirBrowser(dirPath) {
+  const pathEl = document.getElementById('dir-browser-path')
+  const listEl = document.getElementById('dir-browser-list')
+  pathEl.textContent = 'Loading...'
+
   try {
-    const handle = await window.showDirectoryPicker()
-    state.dirHandle = handle
-    document.getElementById('modal-output').value = handle.name
-    showToast(`Selected: ${handle.name}`)
-  } catch {
-    state.dirHandle = null
+    const resp = await fetch('/api/browse', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: dirPath }),
+    })
+    const data = await resp.json()
+
+    if (!data.ok) {
+      pathEl.textContent = 'Error: ' + data.error
+      listEl.innerHTML = ''
+      return
+    }
+
+    state.browsePath = data.current
+    pathEl.textContent = data.current
+
+    let html = ''
+    if (data.parent !== data.current) {
+      html += `<button class="dir-browser-item dir-browser-item-up" data-path="${data.parent}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+        ..
+      </button>`
+    }
+    if (data.dirs.length === 0 && data.parent === data.current) {
+      html += '<div class="dir-browser-empty">(empty directory)</div>'
+    }
+    for (const d of data.dirs) {
+      html += `<button class="dir-browser-item" data-path="${d.path}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        ${d.name}
+      </button>`
+    }
+    listEl.innerHTML = html
+
+    listEl.querySelectorAll('.dir-browser-item').forEach(btn => {
+      btn.addEventListener('click', () => loadDirBrowser(btn.dataset.path))
+    })
+  } catch (err) {
+    pathEl.textContent = 'Error: ' + err.message
+    listEl.innerHTML = ''
+  }
+}
+
+async function handleFolderPick() {
+  if (window.showDirectoryPicker) {
+    try {
+      const handle = await window.showDirectoryPicker()
+      state.dirHandle = handle
+      document.getElementById('dir-browser').style.display = 'none'
+      document.getElementById('modal-output').value = handle.name
+      showToast(`Selected: ${handle.name}`)
+      return
+    } catch {
+      state.dirHandle = null
+    }
+  }
+
+  const browser = document.getElementById('dir-browser')
+  browser.style.display = browser.style.display === 'none' ? 'flex' : 'none'
+  if (browser.style.display === 'flex') {
+    loadDirBrowser(state.browsePath || '/home')
   }
 }
 
@@ -178,6 +241,7 @@ function openModal() {
   packName.textContent = state.activePack
   result.textContent = ''
   result.className = 'modal-result'
+  document.getElementById('dir-browser').style.display = 'none'
 
   if (!state.dirHandle) {
     const defaultDir = state.outputHistory[0] || 'output'
@@ -202,6 +266,7 @@ function openModal() {
 function closeModal() {
   document.getElementById('modal').classList.remove('visible')
   document.getElementById('overlay').classList.remove('visible')
+  document.getElementById('dir-browser').style.display = 'none'
 }
 
 function showResult(msg, type) {
@@ -264,10 +329,14 @@ async function handleGenerate() {
         return
       }
 
+      const pathStr = truncatePath(data.output)
       showResult(
-        `Generated: ${data.output}\n${data.icons.processed} icons · ${(data.size.raw / 1024).toFixed(1)}KB → ${(data.size.optimized / 1024).toFixed(1)}KB (${data.savings}% savings)`,
+        `Generated: ${pathStr}\n${data.icons.processed} icons · ${(data.size.raw / 1024).toFixed(1)}KB → ${(data.size.optimized / 1024).toFixed(1)}KB (${data.savings}% savings)`,
         'success'
       )
+      const resultEl = document.getElementById('modal-result')
+      resultEl.title = data.output
+
       state.outputHistory = [outputDir, ...state.outputHistory.filter(d => d !== outputDir)].slice(0, 5)
       showToast(`Pack "${pack}" generated`)
     }
@@ -305,6 +374,11 @@ function init() {
   document.getElementById('modal-cancel').addEventListener('click', closeModal)
   document.getElementById('overlay').addEventListener('click', closeModal)
   document.getElementById('modal-generate').addEventListener('click', handleGenerate)
+  document.getElementById('dir-browser-select').addEventListener('click', () => {
+    const outputInput = document.getElementById('modal-output')
+    outputInput.value = state.browsePath
+    document.getElementById('dir-browser').style.display = 'none'
+  })
 
   document.getElementById('modal-output').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') handleGenerate()

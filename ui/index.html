@@ -49,7 +49,7 @@
     </main>
   </div>
 
-  <div class="overlay" id="overlay"></div>
+    <div class="overlay" id="overlay"></div>
   <div class="modal" id="modal">
     <div class="modal-header">
       <h3>Generate Pack</h3>
@@ -57,7 +57,7 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
     </div>
-    <div class="modal-body">
+    <div class="modal-body" id="modal-body">
       <div class="modal-field">
         <label class="modal-label">Pack</label>
         <div class="modal-pack-name" id="modal-pack-name"></div>
@@ -73,6 +73,16 @@
         <div class="modal-history" id="modal-history"></div>
       </div>
       <div class="modal-result" id="modal-result"></div>
+      <div class="dir-browser" id="dir-browser" style="display:none">
+        <div class="dir-browser-header">
+          <span class="modal-label">Browse directories</span>
+        </div>
+        <div class="dir-browser-path" id="dir-browser-path"></div>
+        <div class="dir-browser-list" id="dir-browser-list"></div>
+        <div class="dir-browser-footer">
+          <button class="btn btn-primary" id="dir-browser-select">Select this folder</button>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn modal-cancel" id="modal-cancel">Cancel</button>

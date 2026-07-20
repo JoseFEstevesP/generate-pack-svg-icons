@@ -41,6 +41,19 @@ function getSVGFiles(folderPath) {
     .sort()
 }
 
+export function listDirectories(dirPath) {
+  const absPath = path.isAbsolute(dirPath) ? dirPath : path.resolve(ROOT_DIR, dirPath)
+  if (!fs.existsSync(absPath)) {
+    return { ok: false, error: 'Directory does not exist' }
+  }
+  const entries = fs.readdirSync(absPath, { withFileTypes: true })
+  const dirs = entries
+    .filter(e => e.isDirectory())
+    .map(d => ({ name: d.name }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+  return { ok: true, current: absPath, parent: path.dirname(absPath), dirs }
+}
+
 export async function generatePack(packName, outputDir, returnContent = false) {
   const folders = getIconFolders()
   const match = folders.find(f => f.name === packName)
