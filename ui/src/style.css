@@ -600,7 +600,8 @@ code {
   color: #34D399;
   line-height: 1.5;
   font-family: 'JetBrains Mono', monospace;
-  word-break: break-all;
+  word-break: break-word;
+  hyphens: auto;
   max-height: 160px;
   overflow-y: auto;
   white-space: pre-wrap;
