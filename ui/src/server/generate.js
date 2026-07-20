@@ -56,6 +56,36 @@ export function listDirectories(dirPath) {
   return { ok: true, current: absPath, parent: path.dirname(absPath), dirs }
 }
 
+export function savePack(packName, icons) {
+  const iconDir = path.join(ROOT_DIR, 'icon')
+  const packDir = path.join(iconDir, packName)
+
+  if (fs.existsSync(packDir)) {
+    return { ok: false, error: `Pack "${packName}" already exists` }
+  }
+
+  if (!packName || !/^[a-zA-Z0-9_-]+$/.test(packName)) {
+    return { ok: false, error: 'Invalid pack name. Use only letters, numbers, hyphens, and underscores.' }
+  }
+
+  if (!icons || icons.length === 0) {
+    return { ok: false, error: 'No icons selected' }
+  }
+
+  fs.mkdirSync(packDir, { recursive: true })
+
+  const written = []
+  for (const icon of icons) {
+    if (!icon.id || !icon.content) continue
+    const safeName = icon.id.replace(/[^a-zA-Z0-9_-]/g, '_') + '.svg'
+    const filePath = path.join(packDir, safeName)
+    fs.writeFileSync(filePath, icon.content, 'utf8')
+    written.push({ id: icon.id, file: safeName })
+  }
+
+  return { ok: true, name: packName, count: written.length, files: written }
+}
+
 export async function generatePack(packName, outputDir, returnContent = false) {
   const folders = getIconFolders()
   const match = folders.find(f => f.name === packName)

@@ -31,6 +31,10 @@
         </div>
         <div class="topbar-actions">
           <span class="icon-count" id="icon-count">0 icons</span>
+          <button class="btn" id="btn-create-pack">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+            Create Pack
+          </button>
           <button class="btn btn-primary" id="btn-generate" disabled>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             Generate Pack
@@ -90,6 +94,55 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         Generate
       </button>
+    </div>
+  </div>
+
+  <div class="modal create-modal" id="create-modal">
+    <div class="modal-header">
+      <h3>Create Custom Pack</h3>
+      <button class="btn btn-icon modal-close" id="create-modal-close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="create-modal-layout">
+        <div class="create-modal-packs" id="create-pack-list"></div>
+        <div class="create-modal-icons" id="create-pack-icons"></div>
+      </div>
+
+      <div class="selected-icons-section">
+        <label class="modal-label">Selected icons (<span id="selected-count">0</span>)</label>
+        <div class="selected-icons-pool" id="selected-icons-pool">
+          <div class="selected-icons-empty">Pick icons from the packs, upload SVGs, or paste SVG code</div>
+        </div>
+      </div>
+
+      <div class="upload-area" id="upload-area">
+        <div class="upload-area-label">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload SVG files
+        </div>
+        <input type="file" class="upload-area-input" id="upload-input" accept=".svg" multiple>
+      </div>
+
+      <div class="paste-area">
+        <label class="modal-label">Paste SVG</label>
+        <textarea class="paste-textarea" id="paste-svg" placeholder="Paste raw SVG markup here..."></textarea>
+      </div>
+
+      <div>
+        <label class="modal-label" for="create-pack-name">Pack name</label>
+        <div class="create-name-row">
+          <input type="text" class="create-name-input" id="create-pack-name" placeholder="my-custom-pack" autocomplete="off">
+          <button class="btn btn-primary" id="btn-create-submit">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+            Create Pack
+          </button>
+        </div>
+      </div>
+
+      <div class="create-error" id="create-error"></div>
+      <div class="create-success" id="create-success" style="display:none"></div>
     </div>
   </div>
 

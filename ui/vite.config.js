@@ -103,6 +103,25 @@ export default defineConfig({
             return
           }
 
+          if (req.url === '/api/save-pack' && req.method === 'POST') {
+            let body = ''
+            req.on('data', chunk => body += chunk)
+            req.on('end', async () => {
+              try {
+                const { name, icons } = JSON.parse(body)
+                const { savePack } = await import('./src/server/generate.js')
+                const result = savePack(name, icons)
+                res.setHeader('Content-Type', 'application/json')
+                res.end(JSON.stringify(result))
+              } catch (err) {
+                res.statusCode = 500
+                res.setHeader('Content-Type', 'application/json')
+                res.end(JSON.stringify({ ok: false, error: err.message }))
+              }
+            })
+            return
+          }
+
           next()
         })
       },

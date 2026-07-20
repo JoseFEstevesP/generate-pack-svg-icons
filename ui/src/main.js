@@ -453,6 +453,295 @@ async function handleGenerate() {
   btnGen.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Generate`
 }
 
+/* ─── Create Custom Pack ─── */
+
+const createState = {
+  selectedIcons: [],
+  browsePack: null,
+  pasteCounter: 0,
+}
+
+function openCreateModal() {
+  createState.selectedIcons = []
+  createState.pasteCounter = 0
+
+  const modal = document.getElementById('create-modal')
+  const overlay = document.getElementById('overlay')
+
+  document.getElementById('create-error').className = 'create-error'
+  document.getElementById('create-error').textContent = ''
+  document.getElementById('create-success').style.display = 'none'
+  document.getElementById('create-pack-name').value = ''
+  document.getElementById('paste-svg').value = ''
+
+  renderCreatePacks()
+  renderCreateIcons(null)
+  renderSelectedPool()
+
+  modal.classList.add('visible')
+  overlay.classList.add('visible')
+}
+
+function closeCreateModal() {
+  document.getElementById('create-modal').classList.remove('visible')
+  document.getElementById('overlay').classList.remove('visible')
+}
+
+function renderCreatePacks() {
+  const list = document.getElementById('create-pack-list')
+  list.innerHTML = state.packs.map(p => `
+    <button class="create-pack-item${createState.browsePack === p.name ? ' active' : ''}" data-pack="${p.name}">
+      <span>${p.name}</span>
+      <span class="create-pack-count">${p.icons.length}</span>
+    </button>
+  `).join('')
+
+  list.querySelectorAll('.create-pack-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      createState.browsePack = btn.dataset.pack
+      renderCreatePacks()
+      renderCreateIcons(createState.browsePack)
+    })
+  })
+}
+
+function renderCreateIcons(packName) {
+  const container = document.getElementById('create-pack-icons')
+  if (!packName) {
+    container.innerHTML = '<div class="create-modal-icons-empty">Select a pack to browse icons</div>'
+    return
+  }
+  const pack = state.packs.find(p => p.name === packName)
+  if (!pack || pack.icons.length === 0) {
+    container.innerHTML = '<div class="create-modal-icons-empty">No icons in this pack</div>'
+    return
+  }
+
+  const selectedKeys = new Set(createState.selectedIcons.map(ic => ic._key))
+
+  container.innerHTML = pack.icons.map(icon => {
+    const key = packName + '/' + icon.id
+    const isSelected = selectedKeys.has(key)
+    return `
+      <div class="icon-checkbox-card${isSelected ? ' selected' : ''}" data-key="${key}" data-pack="${packName}" data-id="${icon.id}">
+        <div class="icon-checkbox-check">
+          ${isSelected ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+        </div>
+        ${icon.content}
+        <span class="icon-checkbox-label">${icon.id}</span>
+      </div>
+    `
+  }).join('')
+
+  container.querySelectorAll('.icon-checkbox-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const key = card.dataset.key
+      const packN = card.dataset.pack
+      const id = card.dataset.id
+      const existingIdx = createState.selectedIcons.findIndex(ic => ic._key === key)
+
+      if (existingIdx >= 0) {
+        createState.selectedIcons.splice(existingIdx, 1)
+        card.classList.remove('selected')
+        card.querySelector('.icon-checkbox-check').innerHTML = ''
+      } else {
+        const pack = state.packs.find(p => p.name === packN)
+        const icon = pack.icons.find(i => i.id === id)
+        if (icon) {
+          createState.selectedIcons.push({
+            _key: key,
+            id: icon.id,
+            label: packN + '/' + icon.id,
+            content: icon.content,
+          })
+          card.classList.add('selected')
+          card.querySelector('.icon-checkbox-check').innerHTML =
+            '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+        }
+      }
+      renderSelectedPool()
+    })
+  })
+}
+
+function renderSelectedPool() {
+  const pool = document.getElementById('selected-icons-pool')
+  const count = document.getElementById('selected-count')
+  count.textContent = createState.selectedIcons.length
+
+  if (createState.selectedIcons.length === 0) {
+    pool.innerHTML = '<div class="selected-icons-empty">Pick icons from the packs, upload SVGs, or paste SVG code</div>'
+    return
+  }
+
+  pool.innerHTML = createState.selectedIcons.map((icon, idx) => {
+    const svgPreview = icon.content.length > 200
+      ? icon.content.slice(0, 200) + '...'
+      : icon.content
+    return `
+      <div class="selected-icon-tag" title="${icon.label}">
+        ${icon.content}
+        <span>${icon.label.split('/').pop()}</span>
+        <button class="selected-icon-remove" data-index="${idx}" title="Remove">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+    `
+  }).join('')
+
+  pool.querySelectorAll('.selected-icon-remove').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const idx = parseInt(btn.dataset.index)
+      const removed = createState.selectedIcons[idx]
+      createState.selectedIcons.splice(idx, 1)
+      const key = removed._key
+      if (key) {
+        const card = document.querySelector(`.icon-checkbox-card[data-key="${key}"]`)
+        if (card) {
+          card.classList.remove('selected')
+          card.querySelector('.icon-checkbox-check').innerHTML = ''
+        }
+      }
+      renderSelectedPool()
+    })
+  })
+}
+
+function handleUpload(files) {
+  for (const file of files) {
+    if (!file.name.toLowerCase().endsWith('.svg')) continue
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const content = e.target.result
+      const id = file.name.replace(/\.svg$/i, '')
+      const key = 'uploaded/' + id
+      if (createState.selectedIcons.some(ic => ic._key === key)) {
+        showToast(`"${id}" already added`)
+        return
+      }
+      createState.selectedIcons.push({
+        _key: key,
+        id: id,
+        label: 'uploaded/' + id,
+        content,
+      })
+      renderSelectedPool()
+      showToast(`Added "${id}"`)
+    }
+    reader.readAsText(file)
+  }
+}
+
+function handlePaste() {
+  const textarea = document.getElementById('paste-svg')
+  const raw = textarea.value.trim()
+  if (!raw) return
+
+  if (!raw.includes('<svg') || !raw.includes('</svg>')) {
+    showToast('Invalid SVG markup')
+    return
+  }
+
+  createState.pasteCounter++
+  const id = 'pasted-icon-' + createState.pasteCounter
+  const key = 'pasted/' + id
+  createState.selectedIcons.push({
+    _key: key,
+    id: id,
+    label: 'pasted/' + id,
+    content: raw,
+  })
+  textarea.value = ''
+  renderSelectedPool()
+  showToast(`Added pasted icon`)
+}
+
+async function handleCreatePack() {
+  const nameInput = document.getElementById('create-pack-name')
+  const name = nameInput.value.trim()
+  const errorEl = document.getElementById('create-error')
+  const successEl = document.getElementById('create-success')
+  const submitBtn = document.getElementById('btn-create-submit')
+
+  errorEl.className = 'create-error'
+  errorEl.textContent = ''
+  successEl.style.display = 'none'
+
+  if (!name) {
+    errorEl.textContent = 'Enter a pack name'
+    errorEl.className = 'create-error visible'
+    nameInput.focus()
+    return
+  }
+
+  if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
+    errorEl.textContent = 'Use only letters, numbers, hyphens, and underscores'
+    errorEl.className = 'create-error visible'
+    nameInput.focus()
+    return
+  }
+
+  if (state.packs.some(p => p.name === name)) {
+    errorEl.textContent = `Pack "${name}" already exists`
+    errorEl.className = 'create-error visible'
+    nameInput.focus()
+    return
+  }
+
+  if (createState.selectedIcons.length === 0) {
+    errorEl.textContent = 'No icons selected'
+    errorEl.className = 'create-error visible'
+    return
+  }
+
+  const icons = createState.selectedIcons.map(ic => ({
+    id: ic.id,
+    content: ic.content,
+  }))
+
+  submitBtn.disabled = true
+  submitBtn.innerHTML = 'Creating...'
+
+  try {
+    const resp = await fetch('/api/save-pack', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, icons }),
+    })
+    const data = await resp.json()
+
+    if (!data.ok) {
+      errorEl.textContent = data.error
+      errorEl.className = 'create-error visible'
+      submitBtn.disabled = false
+      submitBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg> Create Pack`
+      return
+    }
+
+    successEl.style.display = 'block'
+    successEl.innerHTML = `
+      <div class="create-success-name">${data.name}</div>
+      <div class="create-success-count">${data.count} icons created</div>
+    `
+
+    showToast(`Pack "${data.name}" created with ${data.count} icons`)
+
+    submitBtn.disabled = false
+    submitBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg> Create Pack`
+
+    setTimeout(() => {
+      closeCreateModal()
+      location.reload()
+    }, 2000)
+  } catch (err) {
+    errorEl.textContent = err.message
+    errorEl.className = 'create-error visible'
+    submitBtn.disabled = false
+    submitBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg> Create Pack`
+  }
+}
+
 function init() {
   parsePacks()
   loadConfig().then(() => {
@@ -488,6 +777,50 @@ function init() {
   document.getElementById('modal-output').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') handleGenerate()
   })
+
+  /* Create Pack event listeners */
+  document.getElementById('btn-create-pack').addEventListener('click', openCreateModal)
+  document.getElementById('create-modal-close').addEventListener('click', closeCreateModal)
+  document.getElementById('overlay').addEventListener('click', () => {
+    closeModal()
+    closeCreateModal()
+  })
+
+  document.getElementById('upload-area').addEventListener('click', () => {
+    document.getElementById('upload-input').click()
+  })
+  document.getElementById('upload-input').addEventListener('change', (e) => {
+    handleUpload(e.target.files)
+    e.target.value = ''
+  })
+
+  document.getElementById('upload-area').addEventListener('dragover', (e) => {
+    e.preventDefault()
+    e.currentTarget.classList.add('dragover')
+  })
+  document.getElementById('upload-area').addEventListener('dragleave', (e) => {
+    e.preventDefault()
+    e.currentTarget.classList.remove('dragover')
+  })
+  document.getElementById('upload-area').addEventListener('drop', (e) => {
+    e.preventDefault()
+    e.currentTarget.classList.remove('dragover')
+    if (e.dataTransfer.files.length > 0) {
+      handleUpload(e.dataTransfer.files)
+    }
+  })
+
+  document.getElementById('paste-svg').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      handlePaste()
+    }
+  })
+  document.getElementById('paste-svg').addEventListener('blur', handlePaste)
+
+  document.getElementById('create-pack-name').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleCreatePack()
+  })
+  document.getElementById('btn-create-submit').addEventListener('click', handleCreatePack)
 }
 
 init()
