@@ -236,7 +236,7 @@ function openModal() {
   }
 
   history.innerHTML = state.outputHistory.map(d =>
-    `<button class="modal-history-btn" data-dir="${d}">${d}</button>`
+    `<button class="modal-history-btn" data-dir="${d}" title="${d}">${d}</button>`
   ).join('')
   history.querySelectorAll('.modal-history-btn').forEach(btn => {
     btn.addEventListener('click', () => {

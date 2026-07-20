@@ -496,6 +496,12 @@ code {
   cursor: pointer;
   font-family: 'JetBrains Mono', monospace;
   transition: all 0.12s;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .modal-history-btn:hover {
