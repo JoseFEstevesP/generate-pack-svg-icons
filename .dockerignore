@@ -1,0 +1,13 @@
+node_modules/
+output/
+icon/
+ui/dist/
+ui/node_modules/
+.git/
+.gitignore
+.nvmrc
+geminiChat.txt
+skills-lock.json
+README.md
+*.log
+.DS_Store

@@ -1,0 +1,19 @@
+services:
+  cli:
+    build: .
+    volumes:
+      - ./icon:/app/icon
+      - ./output:/app/output
+    stdin_open: true
+    tty: true
+
+  ui:
+    build: .
+    entrypoint: []
+    command: ["sh", "-c", "cd ui && pnpm dev --host 0.0.0.0"]
+    ports:
+      - "5174:5173"
+    volumes:
+      - ./icon:/app/icon
+      - ./output:/app/output
+    restart: unless-stopped
