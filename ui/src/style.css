@@ -342,6 +342,11 @@ code {
   flex-shrink: 0;
 }
 
+.icon-card svg *[fill="#000"] { fill: var(--text); }
+.icon-card svg *[fill="#000000"] { fill: var(--text); }
+.icon-card svg *[stroke="#000"] { stroke: var(--text); }
+.icon-card svg *[stroke="#000000"] { stroke: var(--text); }
+
 .icon-card-label {
   font-size: 0.643rem;
   color: var(--text-dim);

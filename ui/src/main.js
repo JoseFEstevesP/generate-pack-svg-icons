@@ -1,4 +1,8 @@
-const svgModules = import.meta.glob('../../icon/**/*.svg', { eager: true, query: '?raw' })
+const svgModules = import.meta.glob('../../icon/**/*.svg', {
+  eager: true,
+  query: '?raw',
+  import: 'default',
+})
 
 const state = {
   packs: [],
@@ -8,7 +12,7 @@ const state = {
 
 function parsePacks() {
   const packMap = {}
-  for (const [filepath, content] of Object.entries(svgModules)) {
+  for (const [filepath, raw] of Object.entries(svgModules)) {
     const parts = filepath.replace(/^.*\/icon\//, '').split('/')
     const packName = parts[0]
     const fileName = parts.slice(1).join('/')
@@ -16,7 +20,7 @@ function parsePacks() {
     packMap[packName].push({
       id: fileName.replace(/\.svg$/i, ''),
       name: fileName,
-      content: content,
+      content: typeof raw === 'string' ? raw : '',
     })
   }
   state.packs = Object.entries(packMap).map(([name, icons]) => ({
@@ -82,6 +86,8 @@ function renderGrid() {
   if (state.packs.length === 0) {
     empty.style.display = 'flex'
     grid.style.display = 'none'
+    empty.querySelector('h2').textContent = 'No icons yet'
+    empty.querySelector('p').innerHTML = 'Add SVG files to a folder inside <code>icon/</code> and they will appear here.'
     return
   }
 
@@ -89,16 +95,16 @@ function renderGrid() {
   if (icons.length === 0 && !hasFilter) {
     empty.style.display = 'flex'
     grid.style.display = 'none'
-    document.querySelector('.empty-state h2').textContent = 'No icons in this pack'
-    document.querySelector('.empty-state p').innerHTML = 'Add SVG files to <code>icon/' + state.activePack + '/</code>'
+    empty.querySelector('h2').textContent = 'No icons in this pack'
+    empty.querySelector('p').innerHTML = 'Add SVG files to <code>icon/' + state.activePack + '/</code>'
     return
   }
 
   if (icons.length === 0 && hasFilter) {
     empty.style.display = 'flex'
     grid.style.display = 'none'
-    document.querySelector('.empty-state h2').textContent = 'No matches'
-    document.querySelector('.empty-state p').textContent = 'Try a different search term'
+    empty.querySelector('h2').textContent = 'No matches'
+    empty.querySelector('p').textContent = 'Try a different search term'
     return
   }
 
@@ -154,7 +160,7 @@ function init() {
   btnGen.addEventListener('click', async () => {
     if (!state.activePack) return
     btnGen.disabled = true
-    btnGen.textContent = 'Generating...'
+    btnGen.innerHTML = 'Generating...'
 
     try {
       const resp = await fetch('/api/generate', {
@@ -162,15 +168,21 @@ function init() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pack: state.activePack }),
       })
+      if (!resp.ok) throw new Error('Server unavailable')
       const data = await resp.json()
       if (data.ok) {
         showToast(`Pack "${state.activePack}" generated (${data.savings}% savings)`)
       } else {
         showToast(`Error: ${data.error}`)
       }
-    } catch (err) {
-      // If no server is running, fall back to CLI command hint
-      showToast(`Run: cd .. && pnpm generate --pack "${state.activePack}"`)
+    } catch {
+      const cmd = `pnpm generate --pack "${state.activePack}"`
+      try {
+        await navigator.clipboard.writeText(cmd)
+        showToast(`Command copied: ${cmd}`)
+      } catch {
+        showToast(`Run: ${cmd}`)
+      }
     }
     btnGen.disabled = false
     btnGen.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Generate Pack`
