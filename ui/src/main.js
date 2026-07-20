@@ -177,19 +177,13 @@ async function loadDirBrowser(dirPath) {
 
     let html = ''
     if (data.parent !== data.current) {
-      html += `<button class="dir-browser-item dir-browser-item-up" data-path="${data.parent}">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
-        ..
-      </button>`
+      html += `<button class="dir-browser-item dir-browser-item-up" data-path="${data.parent}">.. (up)</button>`
     }
     if (data.dirs.length === 0 && data.parent === data.current) {
       html += '<div class="dir-browser-empty">(empty directory)</div>'
     }
     for (const d of data.dirs) {
-      html += `<button class="dir-browser-item" data-path="${d.path}">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-        ${d.name}
-      </button>`
+      html += `<button class="dir-browser-item" data-path="${d.path}">${d.name}</button>`
     }
     listEl.innerHTML = html
 

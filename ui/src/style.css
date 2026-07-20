@@ -537,10 +537,8 @@ code {
 }
 
 .dir-browser-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 8px;
+  display: block;
+  padding: 4px 8px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.857rem;
@@ -550,15 +548,15 @@ code {
   background: none;
   width: 100%;
   text-align: left;
+  font-family: 'JetBrains Mono', monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dir-browser-item:hover {
   background: var(--surface-hover);
   color: var(--text);
-}
-
-.dir-browser-item svg {
-  flex-shrink: 0;
 }
 
 .dir-browser-item-up {

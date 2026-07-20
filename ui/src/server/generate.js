@@ -51,7 +51,7 @@ export function listDirectories(dirPath) {
   const entries = fs.readdirSync(absPath, { withFileTypes: true })
   const dirs = entries
     .filter(e => e.isDirectory())
-    .map(d => ({ name: d.name }))
+    .map(d => ({ name: d.name, path: path.join(absPath, d.name) }))
     .sort((a, b) => a.name.localeCompare(b.name))
   return { ok: true, current: absPath, parent: path.dirname(absPath), dirs }
 }
