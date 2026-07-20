@@ -49,6 +49,35 @@
     </main>
   </div>
 
+  <div class="overlay" id="overlay"></div>
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <h3>Generate Pack</h3>
+      <button class="btn btn-icon modal-close" id="modal-close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <label class="modal-label">Pack</label>
+        <div class="modal-pack-name" id="modal-pack-name"></div>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label" for="modal-output">Output directory</label>
+        <input type="text" class="modal-input" id="modal-output" placeholder="output" autocomplete="off">
+        <div class="modal-history" id="modal-history"></div>
+      </div>
+      <div class="modal-result" id="modal-result"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn modal-cancel" id="modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="modal-generate">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Generate
+      </button>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script type="module" src="./src/main.js"></script>

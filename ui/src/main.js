@@ -8,6 +8,7 @@ const state = {
   packs: [],
   activePack: null,
   searchQuery: '',
+  outputHistory: ['output'],
 }
 
 function parsePacks() {
@@ -27,6 +28,20 @@ function parsePacks() {
     name,
     icons: icons.sort((a, b) => a.name.localeCompare(b.name)),
   }))
+}
+
+async function loadConfig() {
+  try {
+    const resp = await fetch('/api/config')
+    const config = await resp.json()
+    if (config.output_history) {
+      state.outputHistory = config.output_history
+    }
+    if (config.last_used && !state.activePack) {
+      const match = state.packs.find(p => p.name === config.last_used)
+      if (match) state.activePack = match.name
+    }
+  } catch {}
 }
 
 function getFilteredIcons() {
@@ -136,15 +151,91 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove('visible'), 1800)
 }
 
-function init() {
-  parsePacks()
+function openModal() {
+  const modal = document.getElementById('modal')
+  const overlay = document.getElementById('overlay')
+  const packName = document.getElementById('modal-pack-name')
+  const outputInput = document.getElementById('modal-output')
+  const result = document.getElementById('modal-result')
+  const history = document.getElementById('modal-history')
 
-  if (state.packs.length > 0) {
-    state.activePack = state.packs[0].name
+  packName.textContent = state.activePack
+  result.textContent = ''
+  result.className = 'modal-result'
+
+  const defaultDir = state.outputHistory[0] || 'output'
+  outputInput.value = defaultDir
+
+  history.innerHTML = state.outputHistory.map(d =>
+    `<button class="modal-history-btn" data-dir="${d}">${d}</button>`
+  ).join('')
+  history.querySelectorAll('.modal-history-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      outputInput.value = btn.dataset.dir
+    })
+  })
+
+  modal.classList.add('visible')
+  overlay.classList.add('visible')
+  outputInput.focus()
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('visible')
+  document.getElementById('overlay').classList.remove('visible')
+}
+
+function showResult(msg, type) {
+  const el = document.getElementById('modal-result')
+  el.textContent = msg
+  el.className = 'modal-result ' + type
+}
+
+async function handleGenerate() {
+  const btnGen = document.getElementById('modal-generate')
+  const pack = state.activePack
+  const outputDir = document.getElementById('modal-output').value.trim() || 'output'
+
+  btnGen.disabled = true
+  btnGen.innerHTML = 'Generating...'
+  showResult('', '')
+  showResult('Generating...', '')
+
+  try {
+    const resp = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pack, outputDir }),
+    })
+    const data = await resp.json()
+
+    if (data.ok) {
+      showResult(
+        `Generated: ${data.output}\n${data.icons.processed} icons · ${(data.size.raw / 1024).toFixed(1)}KB → ${(data.size.optimized / 1024).toFixed(1)}KB (${data.savings}% savings)`,
+        'success'
+      )
+      state.outputHistory = [outputDir, ...state.outputHistory.filter(d => d !== outputDir)].slice(0, 5)
+      showToast(`Pack "${pack}" generated`)
+    } else {
+      showResult(`Error: ${data.error}`, 'error')
+    }
+  } catch (err) {
+    showResult(`Error: ${err.message}`, 'error')
   }
 
-  renderSidebar()
-  renderGrid()
+  btnGen.disabled = false
+  btnGen.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Generate`
+}
+
+function init() {
+  parsePacks()
+  loadConfig().then(() => {
+    if (state.packs.length > 0 && !state.activePack) {
+      state.activePack = state.packs[0].name
+    }
+    renderSidebar()
+    renderGrid()
+  })
 
   const searchInput = document.getElementById('search')
   let debounce
@@ -156,36 +247,14 @@ function init() {
     }, 150)
   })
 
-  const btnGen = document.getElementById('btn-generate')
-  btnGen.addEventListener('click', async () => {
-    if (!state.activePack) return
-    btnGen.disabled = true
-    btnGen.innerHTML = 'Generating...'
+  document.getElementById('btn-generate').addEventListener('click', openModal)
+  document.getElementById('modal-close').addEventListener('click', closeModal)
+  document.getElementById('modal-cancel').addEventListener('click', closeModal)
+  document.getElementById('overlay').addEventListener('click', closeModal)
+  document.getElementById('modal-generate').addEventListener('click', handleGenerate)
 
-    try {
-      const resp = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pack: state.activePack }),
-      })
-      if (!resp.ok) throw new Error('Server unavailable')
-      const data = await resp.json()
-      if (data.ok) {
-        showToast(`Pack "${state.activePack}" generated (${data.savings}% savings)`)
-      } else {
-        showToast(`Error: ${data.error}`)
-      }
-    } catch {
-      const cmd = `pnpm generate --pack "${state.activePack}"`
-      try {
-        await navigator.clipboard.writeText(cmd)
-        showToast(`Command copied: ${cmd}`)
-      } catch {
-        showToast(`Run: ${cmd}`)
-      }
-    }
-    btnGen.disabled = false
-    btnGen.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Generate Pack`
+  document.getElementById('modal-output').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleGenerate()
   })
 }
 
