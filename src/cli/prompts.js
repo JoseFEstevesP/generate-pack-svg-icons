@@ -13,7 +13,7 @@ export async function selectFolder() {
   }
 
   const choices = folders.map(f => {
-    const count = getSVGFiles(f.path).length;
+    const count = getSVGFiles(f.path, true).length;
     const label = count > 0
       ? `${f.name}  ${chalk.gray(`(${count} SVGs`)}`
       : `${f.name}  ${chalk.red('(vacía)')}`;
@@ -31,7 +31,7 @@ export async function selectFolder() {
       pageSize: 12,
       choices,
       default: folders.find(f => f.name === config.last_used)?.path,
-      prefix: '📦',
+      prefix: '\u{1F4E6}',
     },
   ]);
 
@@ -40,14 +40,13 @@ export async function selectFolder() {
     return null;
   }
 
-  // Guardar última carpeta usada
   const selectedFolderName = folders.find(f => f.path === selectedFolder)?.name;
   if (selectedFolderName) {
     config.last_used = selectedFolderName;
     saveConfig(config);
   }
 
-  const svgFiles = getSVGFiles(selectedFolder);
+  const svgFiles = getSVGFiles(selectedFolder, true);
   if (svgFiles.length === 0) {
     console.log(chalk.red(`\nLa carpeta "${selectedFolder}" no contiene archivos SVG.`));
     return null;
@@ -55,7 +54,7 @@ export async function selectFolder() {
 
   const historyChoices = config.output_history.map(h => ({ name: h, value: h }));
   historyChoices.push(new inquirer.Separator());
-  historyChoices.push({ name: '📂  Ingresar otra carpeta...', value: 'other' });
+  historyChoices.push({ name: '\u{1F4C2}  Ingresar otra carpeta...', value: 'other' });
 
   let { outputDir } = await inquirer.prompt([
     {
@@ -63,7 +62,7 @@ export async function selectFolder() {
       name: 'outputDir',
       message: '¿En qué carpeta deseas guardar el pack?',
       choices: historyChoices,
-      prefix: '📂',
+      prefix: '\u{1F4C2}',
     },
   ]);
 
@@ -80,7 +79,6 @@ export async function selectFolder() {
     outputDir = customPath;
   }
 
-  // Guardar en el historial
   addToOutputHistory(outputDir);
 
   return { folderPath: selectedFolder, svgFiles, outputDir };

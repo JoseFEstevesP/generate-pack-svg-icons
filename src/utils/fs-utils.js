@@ -19,7 +19,7 @@ export function getConfig() {
     const config = JSON.parse(data);
     if (!config.output_history) config.output_history = ['output'];
     return config;
-  } catch (e) {
+  } catch {
     return { last_used: '', output_history: ['output'] };
   }
 }
@@ -28,13 +28,19 @@ export function saveConfig(config) {
   fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), 'utf8');
 }
 
+export function toRelativePath(absPath) {
+  return path.relative(ROOT_DIR, absPath);
+}
+
 export function addToOutputHistory(dir) {
   const config = getConfig();
   const history = config.output_history || [];
-  
-  // Remove if already exists and add to start
-  const newHistory = [dir, ...history.filter(d => d !== dir)].slice(0, 5);
-  
+  const entry = path.isAbsolute(dir) ? toRelativePath(dir) : dir;
+  const newHistory = [entry, ...history.filter(d => {
+    const normalized = path.isAbsolute(d) ? toRelativePath(d) : d;
+    return normalized !== entry;
+  })].slice(0, 5);
+
   config.output_history = newHistory;
   saveConfig(config);
 }
@@ -60,11 +66,27 @@ export function getIconFolders() {
     }));
 }
 
-export function getSVGFiles(folderPath) {
+export function getSVGFiles(folderPath, recursive = false) {
   if (!fs.existsSync(folderPath)) return [];
-  return fs.readdirSync(folderPath)
-    .filter(file => file.toLowerCase().endsWith('.svg'))
-    .sort();
+  if (!recursive) {
+    return fs.readdirSync(folderPath)
+      .filter(file => file.toLowerCase().endsWith('.svg'))
+      .sort();
+  }
+  const svgs = [];
+  function walk(dir) {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(fullPath);
+      } else if (entry.name.toLowerCase().endsWith('.svg')) {
+        svgs.push(path.relative(folderPath, fullPath));
+      }
+    }
+  }
+  walk(folderPath);
+  return svgs.sort();
 }
 
 export function readSVGFile(filePath) {

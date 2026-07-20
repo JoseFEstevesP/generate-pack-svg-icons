@@ -1,5 +1,17 @@
 import { optimize } from 'svgo';
+import { XMLParser } from 'fast-xml-parser';
 import svgoConfig from '../../svgo.config.js';
+
+const xmlParser = new XMLParser({
+  ignoreAttributes: false,
+  attributeNamePrefix: '@_',
+  preserveOrder: false,
+  trimValues: true,
+  parseTagValue: false,
+  stopNodes: ['*'],
+});
+
+const SVG_ATTRS = ['viewBox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin'];
 
 export function sanitizeId(name) {
   return name
@@ -14,13 +26,19 @@ export function sanitizeId(name) {
 
 export function extractAttributes(svgTagContent) {
   const attrs = {};
-  const viewBoxMatch = svgTagContent.match(/viewBox="([^"]*)"/);
-  if (viewBoxMatch) {
-    attrs.viewBox = viewBoxMatch[1];
-  }
-  const fillMatch = svgTagContent.match(/fill="([^"]*)"/);
-  if (fillMatch) {
-    attrs.fill = fillMatch[1];
+  const raw = `<svg ${svgTagContent.trim()} />`;
+  try {
+    const parsed = xmlParser.parse(raw);
+    const svg = parsed?.svg;
+    if (!svg) return attrs;
+    for (const attr of SVG_ATTRS) {
+      const key = '@_' + attr;
+      if (svg[key] !== undefined) {
+        attrs[attr] = String(svg[key]);
+      }
+    }
+  } catch {
+    return attrs;
   }
   return attrs;
 }
@@ -29,6 +47,10 @@ function buildAttributesString(attrs) {
   let result = '';
   if (attrs.viewBox) result += ` viewBox="${attrs.viewBox}"`;
   if (attrs.fill) result += ` fill="${attrs.fill}"`;
+  if (attrs.stroke) result += ` stroke="${attrs.stroke}"`;
+  if (attrs['stroke-width']) result += ` stroke-width="${attrs['stroke-width']}"`;
+  if (attrs['stroke-linecap']) result += ` stroke-linecap="${attrs['stroke-linecap']}"`;
+  if (attrs['stroke-linejoin']) result += ` stroke-linejoin="${attrs['stroke-linejoin']}"`;
   return result;
 }
 
@@ -67,7 +89,7 @@ export async function optimizeSVG(content, filePath) {
 export async function processSVGFile(fileName, content, withOptimization = true) {
   let raw = content;
   let optimizedSize = null;
-  let rawSize = raw.length;
+  const rawSize = raw.length;
 
   if (withOptimization) {
     const optimized = await optimizeSVG(raw, fileName);
