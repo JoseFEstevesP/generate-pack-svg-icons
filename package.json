@@ -12,6 +12,8 @@
   },
   "scripts": {
     "generate": "node src/index.js",
+    "ui": "cd ui && pnpm dev",
+    "ui:build": "cd ui && pnpm build",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint src/ tests/",
